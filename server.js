@@ -7,11 +7,8 @@ app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({
-  host: "localhost",
-  port: 5432,
-  database: "attendance",
-  user: "postgres",
-  password: "1234",
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 // ── API: ดึง records ──────────────────────────────
