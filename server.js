@@ -96,6 +96,7 @@ app.post("/api/sso/callback", async (req, res) => {
     );
     const profileData = await profileRes.json();
     const email = profileData.email;
+    console.log("SSO Profile:", JSON.stringify(profileData));
 
     // หา employee จาก email
     const emp = await pool.query("SELECT * FROM employees WHERE email = $1", [
