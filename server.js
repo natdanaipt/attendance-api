@@ -59,5 +59,54 @@ app.get("/api/me", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ── API: SSO Login ────────────────────────────────
+app.post("/api/sso/callback", async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: "ไม่มี code" });
 
+  try {
+    // แลก code เป็น token
+    const credentials = Buffer.from(
+      `${process.env.KMUTNB_CLIENT_ID}:${process.env.KMUTNB_CLIENT_SECRET}`,
+    ).toString("base64");
+
+    const tokenRes = await fetch("https://sso.kmutnb.ac.th/auth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${credentials}`,
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: process.env.KMUTNB_REDIRECT_URI,
+      }),
+    });
+
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok)
+      return res.status(401).json({ error: "แลก token ไม่ได้" });
+
+    // ดึงข้อมูล profile
+    const profileRes = await fetch(
+      "https://sso.kmutnb.ac.th/resources/userinfo",
+      {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      },
+    );
+    const profileData = await profileRes.json();
+    const email = profileData.email;
+
+    // หา employee จาก email
+    const emp = await pool.query("SELECT * FROM employees WHERE email = $1", [
+      email,
+    ]);
+    if (emp.rows.length === 0)
+      return res.status(404).json({ error: "ไม่พบพนักงานในระบบ" });
+
+    res.json({ employee: emp.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.listen(5000, () => console.log("✅ API running on http://localhost:5000"));
