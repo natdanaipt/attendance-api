@@ -85,6 +85,7 @@ app.post("/api/sso/callback", async (req, res) => {
     });
 
     const tokenData = await tokenRes.json();
+    console.log("Token Response Status:", tokenRes.status); // ← เพิ่ม
     console.log("Token Data:", JSON.stringify(tokenData));
     if (!tokenRes.ok)
       return res.status(401).json({ error: "แลก token ไม่ได้" });
