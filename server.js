@@ -5,6 +5,7 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 app.use(express.json());
+console.log("Server version: 2.0");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
