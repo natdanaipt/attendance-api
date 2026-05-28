@@ -108,7 +108,27 @@ app.post("/api/sso/callback", async (req, res) => {
     if (emp.rows.length === 0)
       return res.status(404).json({ error: "ไม่พบพนักงานในระบบ" });
 
-    res.json({ employee: emp.rows[0] });
+    // ── UPDATE dept/pos/gender จาก SSO ทุกครั้งที่ login ──
+    await pool.query(
+      `UPDATE employees SET 
+    dept = $1,
+    pos = $2,
+    gender = $3
+  WHERE email = $4`,
+      [
+        profileData.department_name || emp.rows[0].dept,
+        profileData.position_name || emp.rows[0].pos,
+        profileData.personnel_type || emp.rows[0].gender,
+        email,
+      ],
+    );
+
+    // ดึงข้อมูลใหม่หลัง update
+    const updatedEmp = await pool.query(
+      "SELECT * FROM employees WHERE email = $1",
+      [email],
+    );
+    res.json({ employee: updatedEmp.rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
