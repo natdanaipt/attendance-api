@@ -60,6 +60,18 @@ app.get("/api/me", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.get("/api/attendance/:empId", async (req, res) => {
+  const { empId } = req.params;
+  try {
+    const result = await pool.query(
+      "SELECT * FROM attendance WHERE emp_id = $1 ORDER BY date DESC",
+      [empId],
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // ── API: SSO Login ────────────────────────────────
 app.post("/api/sso/callback", async (req, res) => {
   const { code } = req.body;
