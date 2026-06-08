@@ -27,7 +27,9 @@ app.get("/api/records", async (req, res) => {
 // ── API: ดึง employees ────────────────────────────
 app.get("/api/employees", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM employees ORDER BY id");
+    const result = await pool.query(
+      "SELECT * FROM employees ORDER BY id::integer",
+    );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
