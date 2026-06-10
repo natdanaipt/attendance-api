@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
 
@@ -12,7 +12,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// ── API: ดึง records ──────────────────────────────
+// โ”€โ”€ API: เธ”เธถเธ records โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
 app.get("/api/records", async (req, res) => {
   try {
     const result = await pool.query(
@@ -24,7 +24,7 @@ app.get("/api/records", async (req, res) => {
   }
 });
 
-// ── API: ดึง employees ────────────────────────────
+// โ”€โ”€ API: เธ”เธถเธ employees โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
 app.get("/api/employees", async (req, res) => {
   try {
     const result = await pool.query(
@@ -36,17 +36,17 @@ app.get("/api/employees", async (req, res) => {
   }
 });
 
-// ── API: ดึงข้อมูลตาม email (SSO) ────────────────
+// โ”€โ”€ API: เธ”เธถเธเธเนเธญเธกเธนเธฅเธ•เธฒเธก email (SSO) โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
 app.get("/api/me", async (req, res) => {
   const { email } = req.query;
-  if (!email) return res.status(400).json({ error: "กรุณาระบุ email" });
+  if (!email) return res.status(400).json({ error: "เธเธฃเธธเธ“เธฒเธฃเธฐเธเธธ email" });
 
   try {
     const emp = await pool.query("SELECT * FROM employees WHERE email = $1", [
       email,
     ]);
     if (emp.rows.length === 0)
-      return res.status(404).json({ error: "ไม่พบพนักงาน" });
+      return res.status(404).json({ error: "เนเธกเนเธเธเธเธเธฑเธเธเธฒเธ" });
 
     const empId = emp.rows[0].id;
     const attendance = await pool.query(
@@ -74,13 +74,13 @@ app.get("/api/attendance/:empId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// ── API: SSO Login ────────────────────────────────
+// โ”€โ”€ API: SSO Login โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
 app.post("/api/sso/callback", async (req, res) => {
   const { code } = req.body;
-  if (!code) return res.status(400).json({ error: "ไม่มี code" });
+  if (!code) return res.status(400).json({ error: "เนเธกเนเธกเธต code" });
 
   try {
-    // แลก code เป็น token
+    // เนเธฅเธ code เน€เธเนเธ token
     const credentials = Buffer.from(
       `${process.env.KMUTNB_CLIENT_ID}:${process.env.KMUTNB_CLIENT_SECRET}`,
     ).toString("base64");
@@ -99,12 +99,12 @@ app.post("/api/sso/callback", async (req, res) => {
     });
 
     const tokenData = await tokenRes.json();
-    console.log("Token Response Status:", tokenRes.status); // ← เพิ่ม
+    console.log("Token Response Status:", tokenRes.status); // โ เน€เธเธดเนเธก
     console.log("Token Data:", JSON.stringify(tokenData));
     if (!tokenRes.ok)
-      return res.status(401).json({ error: "แลก token ไม่ได้" });
+      return res.status(401).json({ error: "เนเธฅเธ token เนเธกเนเนเธ”เน" });
 
-    // ดึงข้อมูล profile
+    // เธ”เธถเธเธเนเธญเธกเธนเธฅ profile
     const profileRes = await fetch(
       "https://sso.kmutnb.ac.th/resources/userinfo",
       {
@@ -115,12 +115,12 @@ app.post("/api/sso/callback", async (req, res) => {
     const email = profileData.email;
     console.log("SSO Profile:", JSON.stringify(profileData));
 
-    // หา employee จาก email
+    // เธซเธฒ employee เธเธฒเธ email
     const emp = await pool.query("SELECT * FROM employees WHERE email = $1", [
       email,
     ]);
     if (emp.rows.length === 0)
-      return res.status(404).json({ error: "ไม่พบพนักงานในระบบ" });
+      return res.status(404).json({ error: "เนเธกเนเธเธเธเธเธฑเธเธเธฒเธเนเธเธฃเธฐเธเธ" });
 
     const userInfo = tokenData.user_info;
 
@@ -138,4 +138,23 @@ app.post("/api/sso/callback", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-app.listen(5000, () => console.log("✅ API running on http://localhost:5000"));
+
+// -- API: แก้ไขข้อมูลพนักงาน (Admin only) --
+app.put("/api/employees/:id", async (req, res) => {
+  const { id } = req.params;
+  const { dept, pos } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE employees SET dept = $1, pos = $2 WHERE id = $3 RETURNING *",
+      [dept, pos, id]
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "ไม่พบพนักงาน" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(5000, () => console.log("โ… API running on http://localhost:5000"));
+
