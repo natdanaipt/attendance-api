@@ -3,7 +3,17 @@ const { Pool } = require("pg");
 const cors = require("cors");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "ngrok-skip-browser-warning",
+    ],
+  }),
+);
 app.use(express.json());
 console.log("Server version: 2.0");
 
@@ -138,4 +148,38 @@ app.post("/api/sso/callback", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── API: แก้ไขข้อมูลพนักงาน (Admin only) ──
+app.put("/api/employees/:id", async (req, res) => {
+  const { id } = req.params;
+  const { dept, pos } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE employees SET dept = $1, pos = $2 WHERE id = $3 RETURNING *",
+      [dept, pos, id],
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "ไม่พบพนักงาน" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// ── API: แก้ไขข้อมูลพนักงาน (Admin only) ──
+app.put("/api/employees/:id", async (req, res) => {
+  const { id } = req.params;
+  const { dept, pos } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE employees SET dept = $1, pos = $2 WHERE id = $3 RETURNING *",
+      [dept, pos, id],
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "ไม่พบพนักงาน" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(5000, () => console.log("✅ API running on http://localhost:5000"));
